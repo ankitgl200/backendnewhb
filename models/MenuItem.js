@@ -16,7 +16,7 @@ const menuItemSchema = new mongoose.Schema(
     category: {
       type: String,
       required: [true, 'Please select a category'],
-      enum: ['Snacks', 'Meals', 'Drinks', 'Desserts'],
+      enum: ['Kurkure', 'Chips', 'Instants', 'Drinks', 'Biscuits', 'Chocolates', 'Namkeen'],
     },
     image: {
       type: String,
