@@ -12,7 +12,7 @@ const { getShopStatus } = require('./shopRoutes');
 // @access  Private
 router.post('/', protect, async (req, res) => {
   try {
-    const { items, deliveryAddress, scratchCardId } = req.body;
+    const { items, deliveryAddress, scratchCardId, scratchCardIds } = req.body;
 
     if (!items || items.length === 0) {
       return res.status(400).json({ success: false, message: 'Your cart is empty' });
@@ -65,14 +65,24 @@ router.post('/', protect, async (req, res) => {
     // Retrieve fresh user instance to handle points accurately
     const user = await User.findById(req.user._id);
 
-    // Calculate Scratch Card discount if applicable
-    let discount = 0;
-    let scratchCard = null;
+    // Calculate Scratch Cards discount if applicable (supports up to 2 unique cards)
+    let totalDiscount = 0;
+    const scratchCards = [];
+    
+    let appliedCardIds = [];
+    if (scratchCardIds && Array.isArray(scratchCardIds)) {
+      appliedCardIds = scratchCardIds.slice(0, 2);
+    } else if (scratchCardId) {
+      appliedCardIds = [scratchCardId];
+    }
 
-    if (scratchCardId) {
-      scratchCard = await ScratchCard.findById(scratchCardId);
+    // Remove duplicate card IDs
+    const uniqueCardIds = [...new Set(appliedCardIds)];
+
+    for (const cardId of uniqueCardIds) {
+      const scratchCard = await ScratchCard.findById(cardId);
       if (!scratchCard) {
-        return res.status(404).json({ success: false, message: 'Scratch card not found' });
+        return res.status(404).json({ success: false, message: `Scratch card not found: ${cardId}` });
       }
       if (scratchCard.user.toString() !== req.user._id.toString()) {
         return res.status(403).json({ success: false, message: 'You do not own this scratch card' });
@@ -104,34 +114,38 @@ router.post('/', protect, async (req, res) => {
       }
 
       // Calculate discount value
+      let cardDiscount = 0;
       const index = scratchCard.rewardIndex;
       if (index === 0) {
-        discount = 1;
+        cardDiscount = 1;
       } else if (index === 1) {
-        discount = 2;
+        cardDiscount = 2;
       } else if (index === 2) {
-        discount = 3;
+        cardDiscount = 3;
       } else if (index === 3) {
-        discount = Math.floor(totalAmount * 0.05);
+        cardDiscount = Math.floor(totalAmount * 0.05);
       } else if (index === 4) {
-        discount = Math.floor(totalAmount * 0.10);
+        cardDiscount = Math.floor(totalAmount * 0.10);
       } else if (index === 5) {
         const cheapestPrice = Math.min(...resolvedItems.map(item => item.price));
-        discount = cheapestPrice;
+        cardDiscount = cheapestPrice;
       } else if (index === 6) {
-        discount = 0;
+        cardDiscount = 0;
       }
+      
+      totalDiscount += cardDiscount;
+      scratchCards.push(scratchCard);
     }
 
-    const amountPaid = Math.max(0, totalAmount - discount);
+    const amountPaid = Math.max(0, totalAmount - totalDiscount);
 
     // 3. Cash on Delivery (COD) Payment Logic: no points balance checks or deductions
-    const pointsRedeemed = discount; // Store discount applied (in Rs.)
+    const pointsRedeemed = totalDiscount; // Store discount applied (in Rs.)
     const pointsEarned = 0;
 
-    // Automatically remove/delete used scratch card if applied
-    if (scratchCard) {
-      await scratchCard.deleteOne();
+    // Automatically remove/delete used scratch cards if applied
+    for (const card of scratchCards) {
+      await card.deleteOne();
     }
 
     // 5. Create the Order
