@@ -9,7 +9,6 @@ const { getShopStatus } = require('./shopRoutes');
 
 // @desc    Place a new order
 // @route   POST /api/orders
-// @access  Private
 router.post('/', protect, async (req, res) => {
   try {
     const { items, deliveryAddress, scratchCardId, scratchCardIds } = req.body;
