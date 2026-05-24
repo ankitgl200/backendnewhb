@@ -58,6 +58,16 @@ const orderSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Please add a delivery address'],
     },
+    isLate: {
+      type: Boolean,
+      default: false,
+    },
+    originalAmountPaid: {
+      type: Number,
+    },
+    completedAt: {
+      type: Date,
+    },
   },
   {
     timestamps: true,
