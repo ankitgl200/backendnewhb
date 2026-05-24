@@ -14,6 +14,21 @@ router.get('/orders', protect, admin, async (req, res) => {
     const orders = await Order.find({})
       .populate('user', 'name phone hostelBlock roomNo')
       .sort({ createdAt: -1 });
+
+    // Check and apply 7-minute late delivery penalty for active orders
+    for (const order of orders) {
+      if (!['Completed', 'Cancelled'].includes(order.status)) {
+        const elapsedMs = new Date() - new Date(order.createdAt);
+        if (elapsedMs > 7 * 60 * 1000 && !order.isLate) {
+          order.isLate = true;
+          order.originalAmountPaid = order.amountPaid;
+          const penalty = Math.floor(order.amountPaid / 10);
+          order.amountPaid = Math.max(0, order.amountPaid - penalty);
+          await order.save();
+        }
+      }
+    }
+
     res.json({ success: true, count: orders.length, data: orders });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -46,6 +61,20 @@ router.put('/orders/:id', protect, admin, async (req, res) => {
           $inc: { stock: -item.quantity }
         });
       }
+
+      // Update completedAt and apply penalty if late
+      order.completedAt = new Date();
+      const elapsedMs = order.completedAt - new Date(order.createdAt);
+      if (elapsedMs > 7 * 60 * 1000) {
+        if (!order.isLate) {
+          order.isLate = true;
+          order.originalAmountPaid = order.amountPaid;
+          const penalty = Math.floor(order.amountPaid / 10);
+          order.amountPaid = Math.max(0, order.amountPaid - penalty);
+        }
+      }
+    } else if (status === 'Cancelled') {
+      order.completedAt = undefined;
     }
 
     order.status = status;
