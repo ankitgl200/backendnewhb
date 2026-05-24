@@ -65,13 +65,13 @@ router.post('/', protect, async (req, res) => {
     // Retrieve fresh user instance to handle points accurately
     const user = await User.findById(req.user._id);
 
-    // Calculate Scratch Cards discount if applicable (supports up to 2 unique cards)
+    // Calculate Scratch Cards discount if applicable (supports 1 card)
     let totalDiscount = 0;
     const scratchCards = [];
     
     let appliedCardIds = [];
     if (scratchCardIds && Array.isArray(scratchCardIds)) {
-      appliedCardIds = scratchCardIds.slice(0, 2);
+      appliedCardIds = scratchCardIds.slice(0, 1);
     } else if (scratchCardId) {
       appliedCardIds = [scratchCardId];
     }
