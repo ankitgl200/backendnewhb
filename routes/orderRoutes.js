@@ -31,6 +31,29 @@ router.post('/', protect, async (req, res) => {
       });
     }
 
+    // 1B. Block Acceptance Check
+    // Parse target block from deliveryAddress (format: "Room <num>, Block <X/Y/Z>")
+    let targetBlock = '';
+    if (deliveryAddress.includes('Block X')) targetBlock = 'X';
+    else if (deliveryAddress.includes('Block Y')) targetBlock = 'Y';
+    else if (deliveryAddress.includes('Block Z')) targetBlock = 'Z';
+    else {
+      // Fallback to user's profile block
+      targetBlock = req.user.hostelBlock;
+    }
+
+    const isBlockOpen = 
+      targetBlock === 'X' ? shopStatus.isBlockXOpen :
+      targetBlock === 'Y' ? shopStatus.isBlockYOpen :
+      targetBlock === 'Z' ? shopStatus.isBlockZOpen : true;
+
+    if (!isBlockOpen) {
+      return res.status(400).json({
+        success: false,
+        message: `Sorry, currently we are not accepting orders for your block (Block ${targetBlock}).`
+      });
+    }
+
     // 2. Resolve Items & Calculate Price
     let totalAmount = 0;
     const resolvedItems = [];
