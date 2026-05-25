@@ -204,4 +204,28 @@ router.delete('/users/:id', protect, admin, async (req, res) => {
   }
 });
 
+// @desc    Reset a user's password to '12345'
+// @route   PUT /api/admin/users/:id/reset-password
+// @access  Private/Admin
+router.put('/users/:id/reset-password', protect, admin, async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    // Restriction: Cannot reset permanent superadmin password unless caller is superadmin
+    if (user.phone === '8218325600' && req.user.phone !== '8218325600') {
+      return res.status(403).json({ success: false, message: 'Only the permanent superadmin can reset their own password.' });
+    }
+
+    user.password = '12345';
+    await user.save();
+
+    res.json({ success: true, message: `Password for ${user.name} has been reset to 12345.` });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 module.exports = router;
