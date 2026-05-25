@@ -18,6 +18,18 @@ const shopConfigSchema = new mongoose.Schema(
       type: Number,
       default: 12, // 12 PM noon
     },
+    isBlockXOpen: {
+      type: Boolean,
+      default: true,
+    },
+    isBlockYOpen: {
+      type: Boolean,
+      default: true,
+    },
+    isBlockZOpen: {
+      type: Boolean,
+      default: true,
+    },
   },
   {
     timestamps: true,
