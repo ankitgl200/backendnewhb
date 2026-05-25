@@ -103,7 +103,7 @@ router.get('/users', protect, admin, async (req, res) => {
 // @access  Private/Admin
 router.post('/shop/status', protect, admin, async (req, res) => {
   try {
-    const { isManuallyClosed, isManuallyOpened, openHour, closeHour } = req.body;
+    const { isManuallyClosed, isManuallyOpened, openHour, closeHour, isBlockXOpen, isBlockYOpen, isBlockZOpen } = req.body;
 
     let config = await ShopConfig.findOne();
     if (!config) {
@@ -114,6 +114,9 @@ router.post('/shop/status', protect, admin, async (req, res) => {
     if (isManuallyOpened !== undefined) config.isManuallyOpened = isManuallyOpened;
     if (openHour !== undefined) config.openHour = openHour;
     if (closeHour !== undefined) config.closeHour = closeHour;
+    if (isBlockXOpen !== undefined) config.isBlockXOpen = isBlockXOpen;
+    if (isBlockYOpen !== undefined) config.isBlockYOpen = isBlockYOpen;
+    if (isBlockZOpen !== undefined) config.isBlockZOpen = isBlockZOpen;
 
     await config.save();
 
@@ -125,6 +128,9 @@ router.post('/shop/status', protect, admin, async (req, res) => {
         isManuallyOpened: config.isManuallyOpened,
         openHour: config.openHour,
         closeHour: config.closeHour,
+        isBlockXOpen: config.isBlockXOpen,
+        isBlockYOpen: config.isBlockYOpen,
+        isBlockZOpen: config.isBlockZOpen,
       },
     });
   } catch (error) {
