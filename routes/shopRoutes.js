@@ -12,6 +12,9 @@ const getShopStatus = async () => {
       isManuallyOpened: false,
       openHour: 8,
       closeHour: 12, // 12 PM noon
+      isBlockXOpen: true,
+      isBlockYOpen: true,
+      isBlockZOpen: true,
     });
   }
 
@@ -46,6 +49,9 @@ const getShopStatus = async () => {
     closeHour: config.closeHour,
     isManuallyClosed: config.isManuallyClosed,
     isManuallyOpened: config.isManuallyOpened,
+    isBlockXOpen: config.isBlockXOpen !== undefined ? config.isBlockXOpen : true,
+    isBlockYOpen: config.isBlockYOpen !== undefined ? config.isBlockYOpen : true,
+    isBlockZOpen: config.isBlockZOpen !== undefined ? config.isBlockZOpen : true,
     currentTime: now.toLocaleTimeString(),
   };
 };
